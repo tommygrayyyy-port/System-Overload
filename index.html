@@ -1,0 +1,1192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="A private, bodyweight-training log that helps you build consistency and progressive overload.">
+<meta name="theme-color" content="#000000">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="assets/icon.svg">
+<title>System Overload</title>
+<style>
+@import url('https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700,i400,i500,i600&display=swap');
+
+:root{
+  --bg: #000000;
+  --surface: #070707;
+  --surface-2: #111111;
+  --line: #222222;
+  --text: #FFFFFF;
+  --text-dim: #888888;
+  --accent: #FFFFFF;
+  --radius: 14px; 
+  --glow-sm: 0 0 8px rgba(255,255,255,0.35);
+  --glow-md: 0 0 18px rgba(255,255,255,0.28);
+  --glow-lg: 0 0 30px rgba(255,255,255,0.20);
+}
+
+*{ box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body{ height: 100%; margin:0; background: #000; color: var(--text); font-family: 'General Sans', sans-serif; letter-spacing: -0.2px; }
+
+/* Typography elements */
+.fancy-title { font-family: 'General Sans', sans-serif; font-weight: 600; font-size: 26px; letter-spacing: 0.5px; margin: 0; text-shadow: var(--glow-sm); }
+.fancy-italic { font-family: 'General Sans', sans-serif; font-style: italic; font-weight: 400; }
+
+/* -----------------------------------
+   ONBOARDING & LOGIN SCREEN
+------------------------------------ */
+#onboarding-layer {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: var(--bg); z-index: 1000; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; padding: 24px; text-align: center;
+  transition: opacity 0.8s ease, visibility 0.8s ease;
+}
+#onboarding-layer.hidden { opacity: 0; visibility: hidden; }
+
+.ob-step { display: none; width: 100%; max-width: 380px; animation: fadeIn 0.6s ease forwards; }
+.ob-step.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+.ob-title { font-size: 36px; margin-bottom: 16px; line-height: 1.1; }
+.ob-desc { font-size: 15px; color: var(--text-dim); line-height: 1.6; margin-bottom: 32px; font-weight: 300; }
+.ob-input {
+  width: 100%; background: transparent; border: none; border-bottom: 1px solid var(--line);
+  color: var(--text); font-family: 'General Sans', sans-serif; font-style: italic; font-size: 28px;
+  text-align: center; padding: 12px 0; margin-bottom: 40px; outline: none; transition: border-color 0.3s;
+}
+.ob-input:focus { border-bottom-color: var(--text); }
+.ob-input::placeholder { color: #333; font-family: 'General Sans', sans-serif; font-style: normal; font-size: 16px; }
+
+.ob-btn {
+  width: 100%; background: var(--text); color: var(--bg); border: none; padding: 18px;
+  font-family: 'General Sans', sans-serif; text-transform: uppercase; letter-spacing: 1px; font-size: 12px; font-weight: 600;
+  cursor: pointer; transition: opacity 0.2s; border-radius: var(--radius); box-shadow: var(--glow-lg);
+}
+.ob-btn:active { opacity: 0.7; }
+.ob-btn:disabled { opacity: 0.3; pointer-events: none; }
+
+.philosophy-list { text-align: left; margin-bottom: 40px; }
+.philosophy-list .p-item { margin-bottom: 16px; border-left: 2px solid var(--text); padding-left: 16px; }
+.p-title { font-size: 13px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; font-weight: 500; }
+.p-text { font-size: 14px; color: var(--text-dim); font-weight: 300; line-height: 1.5; }
+
+/* -----------------------------------
+   MAIN APP FRAME
+------------------------------------ */
+.app-container{
+  max-width: 430px; height: 100vh; height: 100dvh; margin: 0 auto;
+  background: var(--bg); display: flex; flex-direction: column; position: relative; overflow: hidden;
+  opacity: 0; transition: opacity 0.8s ease 0.3s;
+}
+.app-container.visible { opacity: 1; }
+@media (min-width: 431px) { .app-container { height: 90vh; margin: 5vh auto; border: 1px solid var(--line); } }
+
+/* Header */
+.app-header{
+  padding: 28px 24px 20px; background: var(--bg); display: flex; justify-content: space-between;
+  align-items: flex-end; border-bottom: 1px solid var(--line); flex-shrink: 0; z-index: 10;
+}
+.app-header .subtitle{ font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin: 0 0 4px 0; }
+.mini-badge{ font-size: 11px; color: var(--text); text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--text); padding-bottom: 2px; text-shadow: var(--glow-sm); }
+.logo-overline{ font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 4px; margin: 0 0 2px 0; font-weight: 500; }
+.logo-wordmark{
+  font-family: 'General Sans', sans-serif; font-weight: 700; font-size: 36px; line-height: 1;
+  letter-spacing: -0.5px; text-transform: uppercase; margin: 0; text-shadow: var(--glow-md);
+}
+
+/* Content Area */
+.tab-viewport{ flex: 1; overflow: hidden; position: relative; }
+.tab-track{ display: flex; width: 400%; height: 100%; transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1); will-change: transform; }
+.content-area{ flex: 0 0 25%; width: 25%; height: 100%; overflow-y: auto; padding: 24px 24px 40px 24px; }
+#tab-workout.active{ padding-bottom: 120px; }
+
+/* Rest Day View */
+.rest-view{ padding-top: 8px; }
+.rest-view .rest-label{ font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+.rest-view .rest-heading{ font-size: 32px; margin: 0 0 24px 0; }
+.next-session-card{ background: var(--surface-2); padding: 20px; border-radius: var(--radius); margin-bottom: 16px; }
+.next-session-card .lbl{ font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); margin-bottom: 6px; }
+.next-session-card .val{ font-size: 20px; font-family: 'General Sans', sans-serif; }
+.recovery-tip-card{ background: var(--surface-2); padding: 20px; border-radius: var(--radius); }
+.recovery-tip-card .lbl{ font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); margin-bottom: 6px; }
+.recovery-tip-card p{ font-size: 14px; color: var(--text); line-height: 1.6; font-weight: 300; margin: 0; }
+
+/* Bottom Nav */
+.bottom-nav{
+  position: absolute; bottom: 0; left: 0; width: 100%; height: 80px;
+  background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(12px); border-top: 1px solid var(--line);
+  display: grid; grid-template-columns: repeat(4, 1fr); padding-bottom: env(safe-area-inset-bottom); z-index: 100;
+}
+.nav-item{
+  background: none; border: none; color: var(--text-dim); opacity: 0.5;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 6px; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative;
+}
+.nav-item::before {
+  content: ''; position: absolute; top: -1px; left: 50%; transform: translateX(-50%) scaleX(0);
+  width: 32px; height: 2px; background: var(--text); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: var(--glow-sm);
+}
+.nav-item svg{ width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.5; }
+.nav-item.active{ color: var(--text); opacity: 1; }
+.nav-item.active::before { transform: translateX(-50%) scaleX(1); }
+.nav-item.active svg{ stroke-width: 2; filter: drop-shadow(0 0 6px rgba(255,255,255,0.4)); }
+.nav-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+/* Today Card */
+.today-card{ padding: 0 0 24px 0; margin-bottom: 24px; border-bottom: 1px solid var(--line); }
+.today-card h2{ margin: 0 0 8px 0; font-size: 32px; }
+.today-card p{ font-size: 14px; color: var(--text-dim); margin: 0; font-weight: 300; }
+
+/* Exercise List */
+.ex-list{ display: flex; flex-direction: column; gap: 24px; }
+.ex-card{ display: flex; flex-direction: column; gap: 12px; }
+.ex-top-row{ display: flex; justify-content: space-between; align-items: baseline; }
+.ex-title{ font-size: 16px; font-weight: 500; letter-spacing: -0.3px; }
+.ex-target{ font-size: 12px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; }
+.ex-desc{ font-size: 13px; color: var(--text-dim); line-height: 1.5; font-weight: 300; }
+
+/* Custom Checkbox */
+.check-btn{
+  width: 24px; height: 24px; border: 1px solid var(--line); background: transparent; color: transparent; 
+  display: flex; align-items: center; justify-content: center; cursor: pointer; border-radius: 50%; transition: all 0.2s;
+}
+.check-btn.checked{ background: var(--text); border-color: var(--text); color: var(--bg); box-shadow: var(--glow-md); }
+.check-btn svg { width: 14px; height: 14px; stroke: currentColor; stroke-width: 2; fill: none; }
+
+/* Logging Inputs */
+.log-row { display: flex; align-items: center; justify-content: space-between; background: var(--surface-2); padding: 12px 16px; border-radius: var(--radius); }
+.log-input{
+  flex: 1; background: transparent; border: none; color: var(--text);
+  font-family: 'General Sans', sans-serif; font-style: italic; font-size: 16px; text-align: right;
+}
+.log-input:focus{ outline: none; }
+.log-input::placeholder{ color: #444; font-family: 'General Sans', sans-serif; font-style: normal; font-size: 13px; }
+
+.last-log-tag{ font-size: 12px; color: #666; font-weight: 400; margin-top: 4px; }
+.overload-banner{
+  color: var(--bg); background: var(--text); font-size: 11px; text-transform: uppercase;
+  letter-spacing: 0.5px; padding: 6px 10px; font-weight: 600; margin-top: 4px; display: inline-block; border-radius: var(--radius);
+  box-shadow: var(--glow-md);
+}
+
+/* Minimalist Calendar */
+.month-selector{ display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; }
+.month-selector h3{ font-size: 20px; font-weight: 400; margin: 0; letter-spacing: 1px; }
+.nav-arrow { background: none; border: none; color: var(--text); font-size: 24px; font-family: serif; cursor: pointer; }
+.cal-grid{ display: grid; grid-template-columns: repeat(7, 1fr); gap: 16px 8px; text-align: center; }
+.cal-wk{ font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+.cal-day{
+  width: 36px; height: 36px; margin: 0 auto; display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 400; cursor: pointer; border-radius: 50%; color: var(--text-dim); transition: all 0.2s;
+}
+.cal-day.pad{ opacity: 0; pointer-events: none; }
+.cal-day.scheduled{ color: var(--text); position: relative; font-weight: 500; }
+.cal-day.scheduled::after {
+  content: ''; position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%);
+  width: 4px; height: 4px; background: var(--text); border-radius: 50%; box-shadow: var(--glow-sm);
+}
+.cal-day.today{ border: 1px solid var(--line); }
+.cal-day.done{ background: var(--text); color: var(--bg); font-weight: 600; border: none; box-shadow: var(--glow-md); }
+.cal-day.done::after { display: none; } 
+
+/* Stats Tab & System Integrity */
+.stat-group { display: flex; flex-direction: column; gap: 32px; margin-top: 24px; }
+.stat-item { border-bottom: 1px solid var(--line); padding-bottom: 16px; }
+.stat-item .lbl { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); margin-bottom: 8px; }
+.stat-item .num { font-size: 42px; font-family: 'General Sans', sans-serif; text-shadow: var(--glow-md); }
+.xp-bar-bg{ height: 2px; background: var(--line); width: 100%; margin-top: 16px; position: relative; }
+.xp-bar-fill{ height: 100%; background: var(--text); position: absolute; top: 0; left: 0; transition: width 0.5s; box-shadow: var(--glow-sm); }
+
+.integrity-block { border-bottom: 1px solid var(--line); padding-bottom: 16px; transition: background 0.3s, color 0.3s, padding 0.3s; border-radius: var(--radius); }
+.integrity-block .lbl { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); margin-bottom: 8px; }
+.integrity-block .num { font-size: 42px; font-family: 'General Sans', sans-serif; text-shadow: var(--glow-md); }
+.integrity-state {
+  display: inline-block; font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px;
+  font-weight: 600; margin-top: 8px; padding-bottom: 2px; border-bottom: 1px solid currentColor;
+}
+.integrity-meta { font-size: 11px; color: var(--text-dim); margin-top: 12px; text-transform: uppercase; letter-spacing: 1px; }
+.integrity-bar-bg { height: 6px; background: var(--line); width: 100%; margin-top: 16px; position: relative; overflow: hidden; }
+.integrity-bar-fill { height: 100%; background: var(--text); width: 0; position: absolute; top: 0; left: 0; transition: width 0.5s ease, background 0.3s; box-shadow: var(--glow-sm); }
+
+.integrity-block.on-track .integrity-bar-bg { background: var(--line); }
+.integrity-block.on-track .integrity-bar-fill { background: var(--text); }
+.integrity-block.slipping { border: 1px solid var(--text); padding: 16px; border-bottom: 1px solid var(--text); }
+.integrity-block.slipping .integrity-bar-bg { background: transparent; outline: 1px solid var(--text); outline-offset: -1px; }
+.integrity-block.slipping .integrity-bar-fill { background: var(--text); opacity: 0.45; }
+.integrity-block.behind { background: var(--text); color: var(--bg); padding: 16px; border-bottom: 1px solid var(--text); }
+.integrity-block.behind .lbl { color: #444; }
+.integrity-block.behind .integrity-meta { color: #444; }
+.integrity-block.behind .integrity-bar-bg { background: #ccc; }
+.integrity-block.behind .integrity-bar-fill { background: #000; }
+
+/* Guide Tab */
+.guide-section { margin-bottom: 40px; }
+.guide-section h3 { font-family: 'General Sans', sans-serif; font-size: 22px; margin: 0 0 16px 0; font-style: italic; }
+.guide-section p, .guide-section li { font-size: 14px; color: #999; line-height: 1.6; margin-bottom: 12px; font-weight: 300; }
+.guide-section ul { padding-left: 20px; }
+
+.action-btn{
+  width: 100%; background: var(--text); color: var(--bg); border: none; padding: 18px;
+  font-family: 'General Sans', sans-serif; text-transform: uppercase; letter-spacing: 1px; font-size: 12px; font-weight: 600;
+  cursor: pointer; margin-top: 24px; transition: opacity 0.2s; border-radius: var(--radius); box-shadow: var(--glow-lg);
+}
+
+/* PROGRESSIVE DISCLOSURE DRAWER */
+.drawer-overlay {
+  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);
+  opacity: 0; pointer-events: none; transition: opacity 0.3s; z-index: 200;
+}
+.drawer-overlay.open { opacity: 1; pointer-events: all; }
+
+.drawer-panel {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  background: #0a0a0a; border-top: 1px solid var(--line);
+  padding: 32px 24px 40px; transform: translateY(100%); 
+  transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+  z-index: 201; max-height: 85vh; overflow-y: auto;
+  border-radius: var(--radius) var(--radius) 0 0;
+}
+.drawer-panel.open { transform: translateY(0); }
+
+.drawer-close {
+  position: absolute; top: 24px; right: 24px; background: none; border: none; color: var(--text-dim); font-size: 24px; cursor: pointer; padding: 0; line-height: 1;
+}
+.drawer-log-item { background: var(--surface-2); padding: 16px; margin-bottom: 12px; border-radius: var(--radius); }
+</style>
+</head>
+<body>
+
+<!-- ONBOARDING LAYER -->
+<div id="onboarding-layer">
+  <div class="ob-step active" id="step-1">
+    <h1 class="fancy-title ob-title">Identify<br>Yourself.</h1>
+    <p class="ob-desc">The system needs an alias to store your progression locally.</p>
+    <input type="text" id="ob-name" class="ob-input" placeholder="Enter your name" oninput="checkInput()">
+    <button class="ob-btn" id="ob-btn-1" disabled onclick="nextStep(2)">Continue</button>
+  </div>
+  <div class="ob-step" id="step-2">
+    <h1 class="fancy-title ob-title">Current<br>Mass.</h1>
+    <p class="ob-desc">Your bodyweight is the load you're training against. It's also used to set your daily protein target (~1g per pound) and track relative strength gains over time.</p>
+    <input type="number" inputmode="decimal" min="1" id="ob-weight" class="ob-input" placeholder="Bodyweight in lbs" oninput="checkWeightInput()">
+    <button class="ob-btn" id="ob-btn-2" disabled onclick="nextStep(3)">Continue</button>
+  </div>
+  <div class="ob-step" id="step-3">
+    <h1 class="fancy-title ob-title">No Iron.<br>No Gym.</h1>
+    <p class="ob-desc">You are the weight. This protocol is built on tension, mechanics, and progressive overload at home.</p>
+    <div class="philosophy-list">
+      <div class="p-item">
+        <div class="p-title">Mechanical Tension</div>
+        <div class="p-text">Never use momentum. 3 seconds down on every single rep.</div>
+      </div>
+      <div class="p-item">
+        <div class="p-title">Infinite Overload</div>
+        <div class="p-text">When bodyweight becomes easy, we add textbooks to a backpack. We never plateau.</div>
+      </div>
+      <div class="p-item">
+        <div class="p-title">Absolute Recovery</div>
+        <div class="p-text">Growth happens when you sleep and eat, not when you lift.</div>
+      </div>
+    </div>
+    <button class="ob-btn" onclick="finishOnboarding()">Start Training</button>
+  </div>
+</div>
+
+<!-- MAIN APP CONTAINER -->
+<div class="app-container" id="main-app">
+  <div class="app-header">
+    <div>
+      <p class="logo-overline">System</p>
+      <h1 class="logo-wordmark">Overload</h1>
+    </div>
+    <div style="text-align: right;">
+      <div class="subtitle" id="displayUsername" style="color:var(--text); font-weight:600;">User</div>
+      <div class="mini-badge" id="todayBadge">—</div>
+      <div style="font-size:10px; color:var(--text-dim); text-transform:uppercase; letter-spacing:1px; margin-top:6px;" id="streakBadge">0 day streak</div>
+    </div>
+  </div>
+
+  <div class="tab-viewport">
+  <div class="tab-track" id="tabTrack">
+
+  <div class="content-area active" id="tab-workout">
+    <div class="today-card" id="todayCard">
+      <h2 class="fancy-title" id="todayTitle">Loading...</h2>
+      <p id="todayDesc">...</p>
+    </div>
+    <div style="font-size:11px; color:var(--text-dim); text-transform:uppercase; letter-spacing:1px; margin-bottom:24px; display:flex; justify-content:space-between;">
+      <span id="sessionLogHeader">Session Log</span>
+      <span id="selectedDateLabel">Today</span>
+    </div>
+    <div class="ex-list" id="exerciseListContainer"></div>
+  </div>
+
+  <div class="content-area" id="tab-calendar">
+    <div class="month-selector">
+      <button class="nav-arrow" aria-label="Previous month" onclick="changeMonth(-1)">‹</button>
+      <h3 class="fancy-title" id="calMonthTitle"></h3>
+      <button class="nav-arrow" aria-label="Next month" onclick="changeMonth(1)">›</button>
+    </div>
+    <div class="cal-grid">
+      <div class="cal-wk">Su</div><div class="cal-wk">Mo</div><div class="cal-wk">Tu</div><div class="cal-wk">We</div><div class="cal-wk">Th</div><div class="cal-wk">Fr</div><div class="cal-wk">Sa</div>
+    </div>
+    <div class="cal-grid" id="calDaysGrid"></div>
+  </div>
+
+  <div class="content-area" id="tab-stats">
+    <div class="stat-group">
+      <div class="stat-item">
+        <div class="lbl">Bodyweight</div>
+        <div class="num" id="statBodyweight">—</div>
+        <div style="font-size: 11px; color: var(--text-dim); margin-top: 4px; text-transform: uppercase; letter-spacing: 1px;">lbs</div>
+        <div style="font-size: 11px; color: var(--text-dim); margin-top: 12px; text-transform: uppercase; letter-spacing: 1px;" id="statProteinTarget">0g daily protein target</div>
+        <button class="nav-arrow" style="font-family:'General Sans',sans-serif; font-size:11px; text-transform:uppercase; letter-spacing:1px; margin-top:12px; padding:0;" onclick="editBodyweight()">Update</button>
+      </div>
+      <div class="stat-item">
+        <div class="lbl">Consistency — showing up</div>
+        <div class="num" id="statStreak">0</div>
+        <div style="font-size: 11px; color: var(--text-dim); margin-top: 4px; text-transform: uppercase; letter-spacing: 1px;">day streak</div>
+        <div style="font-size: 11px; color: var(--text-dim); margin-top: 12px; text-transform: uppercase; letter-spacing: 1px;" id="statConsistencyXP">0 consistency XP</div>
+      </div>
+      <div class="stat-item">
+        <div class="lbl">Performance — getting stronger</div>
+        <div class="num" id="statPRCount">0</div>
+        <div style="font-size: 11px; color: var(--text-dim); margin-top: 4px; text-transform: uppercase; letter-spacing: 1px;">personal records</div>
+        <div style="font-size: 11px; color: var(--text-dim); margin-top: 12px; text-transform: uppercase; letter-spacing: 1px;" id="statPerformanceXP">0 performance XP</div>
+        <div id="recentPRList" style="margin-top: 16px;"></div>
+      </div>
+      <div class="stat-item">
+        <div class="lbl">Total Sessions</div>
+        <div class="num" id="statSessions">0</div>
+      </div>
+      <!-- MONTHLY DISCIPLINE -->
+      <div class="integrity-block on-track" id="disciplineBlock">
+        <div class="lbl" id="disciplineMonthLabel">Progress</div>
+        <div class="num" id="disciplinePct">—</div>
+        <div class="integrity-state" id="disciplineState">No data</div>
+        <div class="integrity-bar-bg"><div class="integrity-bar-fill" id="disciplineBar"></div></div>
+        <div class="integrity-meta" id="disciplineMeta">No scheduled sessions this month yet.</div>
+      </div>
+      <div class="stat-item">
+        <div class="lbl">Your Data</div>
+        <p style="font-size:13px; color:var(--text-dim); line-height:1.5; font-weight:300; margin:0 0 16px;">Your training data is stored only on this device. Export a backup before changing phones or clearing browser data.</p>
+        <button class="action-btn" style="margin-top:0; margin-bottom:10px;" onclick="exportBackup()">Export Backup</button>
+        <button class="action-btn" style="margin-top:0; margin-bottom:10px; background:transparent; color:var(--text); border:1px solid var(--line); box-shadow:none;" onclick="document.getElementById('backupFile').click()">Restore Backup</button>
+        <button class="action-btn" style="margin-top:0; background:transparent; color:var(--text-dim); border:1px solid var(--line); box-shadow:none;" onclick="resetAppData()">Reset All Data</button>
+        <input id="backupFile" type="file" accept="application/json" hidden onchange="importBackup(this)">
+      </div>
+    </div>
+  </div>
+
+  <div class="content-area" id="tab-guide">
+    <div class="guide-section">
+      <h3>The Bodyweight Code</h3>
+      <ul>
+        <li><strong>Tension:</strong> No momentum. 3 seconds down on every eccentric movement.</li>
+        <li><strong>Overload:</strong> Once the top rep range is hit, add external load via a weighted backpack the next session.</li>
+        <li><strong>Rest:</strong> 90–120 seconds between sets. Do not turn lifting into cardio.</li>
+      </ul>
+    </div>
+    <div class="guide-section">
+      <h3>Nutrition</h3>
+      <p><strong>Protein Target:</strong> ~1g per pound of bodyweight daily.</p>
+      <p><strong>Surplus Shake:</strong> 2 cups milk, 2 scoops peanut butter, 1 cup oats, 1 banana. Blend for ~800 clean calories.</p>
+    </div>
+  </div>
+
+  </div>
+  </div>
+
+  <div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
+  <div class="drawer-panel" id="drawerPanel">
+    <button class="drawer-close" aria-label="Close drawer" onclick="closeDrawer()">×</button>
+    <div id="drawerContent"></div>
+  </div>
+
+  <nav class="bottom-nav">
+    <button class="nav-item active" data-tab="workout" aria-label="Log Tab" onclick="switchTab('workout', this)">
+      <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16" stroke-linecap="round"/></svg>
+      <span class="nav-label">Log</span>
+    </button>
+    <button class="nav-item" data-tab="calendar" aria-label="Calendar Tab" onclick="switchTab('calendar', this)">
+      <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <span class="nav-label">Calendar</span>
+    </button>
+    <button class="nav-item" data-tab="stats" aria-label="Stats Tab" onclick="switchTab('stats', this)">
+      <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      <span class="nav-label">Stats</span>
+    </button>
+    <button class="nav-item" data-tab="guide" aria-label="Rules Tab" onclick="switchTab('guide', this)">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+      <span class="nav-label">Rules</span>
+    </button>
+  </nav>
+</div>
+
+<script>
+const APP_USER_KEY = 'systemOverload_user';
+const APP_WEIGHT_KEY = 'systemOverload_bodyweight';
+const APP_ONBOARD_KEY = 'systemOverload_onboardDate';
+
+let autoSaveTimer = null;
+
+function clearAutoSaveTimer() {
+  if (autoSaveTimer) {
+    clearTimeout(autoSaveTimer);
+    autoSaveTimer = null;
+  }
+}
+
+function getToday(){
+  const d = new Date();
+  d.setHours(0,0,0,0);
+  return d;
+}
+
+function getTodayKey(){
+  const t = getToday();
+  return dateKey(t.getFullYear(), t.getMonth(), t.getDate());
+}
+
+function checkMigration(){
+  if (localStorage.getItem(APP_USER_KEY) && !localStorage.getItem(APP_ONBOARD_KEY)) {
+    let earliest = null;
+    for(let i=0; i<localStorage.length; i++){
+      let k = localStorage.key(i);
+      if(k.startsWith('progress:')) {
+        let dStr = k.slice(9);
+        if(!earliest || dStr < earliest) earliest = dStr;
+      }
+    }
+    if(!earliest) {
+      earliest = getTodayKey();
+    }
+    localStorage.setItem(APP_ONBOARD_KEY, earliest);
+  }
+}
+
+function initApp() {
+  checkMigration();
+  const savedUser = localStorage.getItem(APP_USER_KEY);
+  const savedWeight = localStorage.getItem(APP_WEIGHT_KEY);
+  if (!savedUser || !savedWeight) {
+    document.getElementById('onboarding-layer').classList.remove('hidden');
+  } else {
+    document.getElementById('onboarding-layer').classList.add('hidden');
+    document.getElementById('main-app').classList.add('visible');
+    document.getElementById('displayUsername').textContent = savedUser;
+    renderWorkoutTab(activeDateKey);
+    updateHeaderStreak();
+  }
+}
+
+function checkInput() {
+  const val = document.getElementById('ob-name').value.trim();
+  document.getElementById('ob-btn-1').disabled = val.length === 0;
+}
+
+function checkWeightInput() {
+  const val = parseFloat(document.getElementById('ob-weight').value);
+  document.getElementById('ob-btn-2').disabled = !(val > 0);
+}
+
+function nextStep(step) {
+  document.querySelectorAll('.ob-step').forEach(el => el.classList.remove('active'));
+  document.getElementById('step-' + step).classList.add('active');
+}
+
+function finishOnboarding() {
+  const name = document.getElementById('ob-name').value.trim();
+  const weight = parseFloat(document.getElementById('ob-weight').value);
+  const onboardKey = getTodayKey();
+
+  localStorage.setItem(APP_USER_KEY, name);
+  localStorage.setItem(APP_WEIGHT_KEY, weight);
+  localStorage.setItem(APP_ONBOARD_KEY, onboardKey);
+
+  document.getElementById('displayUsername').textContent = name;
+  document.getElementById('onboarding-layer').style.opacity = '0';
+  setTimeout(() => {
+    document.getElementById('onboarding-layer').classList.add('hidden');
+    document.getElementById('main-app').classList.add('visible');
+    renderWorkoutTab(activeDateKey);
+    updateHeaderStreak();
+  }, 800);
+}
+
+const WORKOUTS = {
+  A: { key: 'A', label: 'Push', subtitle: 'Shoulders, Chest & Triceps',
+    exercises: [
+      { name:'Pike Push-Ups', targetRange:[8,12], target:'4 × 8–12', setup:'Feet elevated. Head descends diagonally.' },
+      { name:'Deficit Push-Ups', targetRange:[10,15], target:'4 × 10–15', setup:'Hands elevated for stretch. 3s eccentric.' },
+      { name:'Chair Dips', targetRange:[12,15], target:'3 × 12–15', setup:'Elbows tucked straight back.' },
+      { name:'Neck Flexion', targetRange:[20,25], target:'3 × 20–25', setup:'Bed-edge. Controlled chin tucks.' }
+    ]
+  },
+  B: { key: 'B', label: 'Pull & Legs', subtitle: 'Back, Legs & Core',
+    exercises: [
+      { name:'Frame Rows', targetRange:[12,15], target:'4 × 12–15', setup:'Deep lean, pull chest to anchor.' },
+      { name:'Split Squats', targetRange:[10,12], target:'3 × 10–12 / leg', setup:'Rear foot elevated. Thigh parallel.' },
+      { name:'Neck Extension', targetRange:[20,25], target:'3 × 20–25', setup:'Face down bed-edge. Controlled raise.' },
+      { name:'Hollow Holds', targetRange:[45,60], target:'3 × 45–60s', setup:'Core braced, lower back flat.' }
+    ]
+  }
+};
+
+let viewYear = getToday().getFullYear();
+let viewMonth = getToday().getMonth();
+let activeDateKey = getTodayKey();
+
+const RECOVERY_TIPS = [
+  "Aim for 7-9 hours of sleep tonight. Muscle repair happens overnight, not in the gym.",
+  "Hit your protein target today even though you're not training. Recovery still needs the raw material.",
+  "Stay hydrated. Water supports joint recovery and muscle repair just as much as food does.",
+  "Light walking or stretching is fine today. Just avoid loading the muscles you trained hard.",
+  "Soreness is normal for 24-48 hours. Sharp joint pain is not — back off if you feel that.",
+  "Use today to prep meals or plan tomorrow's session so you're not scrambling later.",
+  "A short mobility routine (hips, shoulders, ankles) can speed up recovery without adding fatigue."
+];
+
+function getRecoveryTip(dateObj){
+  const start = new Date(dateObj.getFullYear(), 0, 0);
+  const dayOfYear = Math.floor((dateObj - start) / 86400000);
+  return RECOVERY_TIPS[dayOfYear % RECOVERY_TIPS.length];
+}
+
+function pad(n){ return n < 10 ? '0'+n : ''+n; }
+function dateKey(y,m,d){ return `${y}-${pad(m+1)}-${pad(d)}`; }
+function splitFor(date){
+  const d = date.getDay();
+  if(d === 1 || d === 4) return 'A';
+  if(d === 2 || d === 5) return 'B';
+  return 'rest';
+}
+
+function switchTab(tabId, btn){
+  clearAutoSaveTimer();
+  const currentTodayKey = getTodayKey();
+  if(activeDateKey === lastEvaluatedTodayKey && activeDateKey !== currentTodayKey){
+    activeDateKey = currentTodayKey;
+  }
+  lastEvaluatedTodayKey = currentTodayKey;
+
+  document.querySelectorAll('.content-area').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + tabId).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  btn.classList.add('active');
+
+  const idx = TAB_ORDER.indexOf(tabId);
+  document.getElementById('tabTrack').style.transform = 'translateX(-' + (idx * 25) + '%)';
+
+  if(tabId === 'workout') renderWorkoutTab(activeDateKey);
+  if(tabId === 'calendar') renderCalendarGrid();
+  if(tabId === 'stats') renderStatsTab();
+}
+
+let lastEvaluatedTodayKey = getTodayKey();
+
+async function getLastSessionData(currentKey, split){
+  let currDate = new Date(currentKey);
+  for(let i = 1; i < 30; i++){
+    let prevDate = new Date(currDate);
+    prevDate.setDate(prevDate.getDate() - i);
+    if(splitFor(prevDate) === split){
+      let pKey = dateKey(prevDate.getFullYear(), prevDate.getMonth(), prevDate.getDate());
+      let data = localStorage.getItem('progress:'+pKey);
+      if(data) { try { return JSON.parse(data); } catch(e) {} }
+    }
+  }
+  return null;
+}
+
+async function renderWorkoutTab(key){
+  clearAutoSaveTimer();
+  activeDateKey = key;
+  const [y, m, d] = key.split('-').map(Number);
+  const dateObj = new Date(y, m-1, d);
+  const split = splitFor(dateObj);
+  const todayKeyStr = getTodayKey();
+  const isFuture = key > todayKeyStr;
+  const isToday = key === todayKeyStr;
+  
+  const card = document.getElementById('todayCard');
+  const container = document.getElementById('exerciseListContainer');
+  document.getElementById('selectedDateLabel').textContent = isToday ? 'Today' : dateObj.toLocaleDateString(undefined, {month:'short', day:'numeric'});
+
+  if(isFuture){
+    card.innerHTML = `<h2 class="fancy-title">Planned Session</h2><p>Future session — logging locked until date arrives.</p>`;
+    container.innerHTML = `<div style="text-align:center; padding: 32px 0; color:var(--text-dim); font-weight:300;">Cannot log or edit future workouts.</div>`;
+    window.currentSplit = split;
+    return;
+  }
+
+  if(split === 'rest'){
+    card.innerHTML = `<h2 class="fancy-title">Rest Day</h2><p>No workout scheduled for this date.</p>`;
+
+    let nextDate = new Date(dateObj);
+    let nextSplit = 'rest';
+    let nextLabel = 'Rest';
+    for(let i = 1; i <= 7; i++){
+      nextDate.setDate(nextDate.getDate() + 1);
+      nextSplit = splitFor(nextDate);
+      if(nextSplit !== 'rest'){
+        nextLabel = WORKOUTS[nextSplit].label;
+        break;
+      }
+    }
+    const tip = getRecoveryTip(dateObj);
+
+    container.innerHTML = `
+      <div class="next-session-card">
+        <div class="lbl">Following Session</div>
+        <div class="val">${nextLabel}</div>
+      </div>
+      <div class="recovery-tip-card">
+        <div class="lbl">Recovery Tip</div>
+        <p>${tip}</p>
+      </div>
+    `;
+    window.currentSplit = 'rest';
+    return;
+  }
+
+  const w = WORKOUTS[split];
+  card.innerHTML = `<h2 class="fancy-title">${w.label}</h2><p>${w.subtitle}</p>`;
+
+  let progress = [];
+  try { progress = JSON.parse(localStorage.getItem('progress:'+key)) || []; } catch(e) {}
+  
+  if(!Array.isArray(progress) || progress.length !== w.exercises.length){
+    progress = new Array(w.exercises.length).fill(null).map(() => ({ done: false, log: '' }));
+  }
+  let lastData = await getLastSessionData(key, split);
+
+  let html = '';
+  w.exercises.forEach((ex, i) => {
+    let item = progress[i] || { done: false, log: '' };
+    let lastItem = (lastData && lastData[i]) ? lastData[i] : null;
+    let showOverload = false;
+    if(lastItem && lastItem.log){
+      const expectedSets = parseInt(ex.target.split('×')[0], 10) || 1;
+      let nums = lastItem.log.match(/\d+/g)?.map(Number) || [];
+      if(nums.length >= expectedSets && nums.every(n => n >= ex.targetRange[1])){
+        showOverload = true;
+      }
+    }
+
+    html += `
+      <div class="ex-card">
+        <div class="ex-top-row">
+          <div class="ex-title">${ex.name}</div>
+          <div class="ex-target">${ex.target}</div>
+        </div>
+        <div class="ex-desc">${ex.setup}</div>
+        <div class="log-row">
+          <button class="check-btn ${item.done ? 'checked' : ''}" aria-label="Toggle ${ex.name} completion" onclick="toggleEx(${i})">
+            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          </button>
+          <div style="flex:1; text-align:right;">
+            <input type="text" inputmode="numeric" class="log-input" data-idx="${i}" value="${item.log || ''}" placeholder="e.g. 12, 11, 10" oninput="updateLog(${i}, this)">
+          </div>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+          ${lastItem ? `<div class="last-log-tag">Prev: <span class="fancy-italic">${lastItem.log || '---'}</span></div>` : '<div></div>'}
+          ${showOverload ? `<div class="overload-banner">Add Load</div>` : ''}
+        </div>
+      </div>
+    `;
+  });
+
+  container.innerHTML = html;
+  window.currentProgress = progress;
+  window.currentSplit = split;
+}
+
+window.toggleEx = (i) => {
+  window.currentProgress[i].done = !window.currentProgress[i].done;
+  localStorage.setItem('progress:' + activeDateKey, JSON.stringify(window.currentProgress));
+  renderWorkoutTab(activeDateKey);
+  updateHeaderStreak();
+  flashAutoSave();
+};
+
+window.updateLog = (i, el) => {
+  const sanitized = el.value.replace(/[^0-9,]/g, '');
+  if (el.value !== sanitized) {
+    el.value = sanitized;
+  }
+  window.currentProgress[i].log = sanitized;
+  localStorage.setItem('progress:' + activeDateKey, JSON.stringify(window.currentProgress));
+  updateHeaderStreak();
+  flashAutoSave();
+};
+
+function flashAutoSave(){
+  const label = document.getElementById('selectedDateLabel');
+  const [y, m, d] = activeDateKey.split('-').map(Number);
+  const dateObj = new Date(y, m-1, d);
+  const isToday = activeDateKey === getTodayKey();
+  const normalText = isToday ? 'Today' : dateObj.toLocaleDateString(undefined, {month:'short', day:'numeric'});
+
+  clearAutoSaveTimer();
+
+  label.textContent = 'Saved ✓';
+  label.style.color = '#fff';
+
+  autoSaveTimer = setTimeout(() => {
+    label.textContent = normalText;
+    label.style.color = 'var(--text-dim)';
+    autoSaveTimer = null;
+  }, 1200);
+}
+
+function renderCalendarGrid(){
+  const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  document.getElementById('calMonthTitle').textContent = `${monthNames[viewMonth]} ${viewYear}`;
+  
+  const grid = document.getElementById('calDaysGrid');
+  let html = '';
+  
+  const firstDay = new Date(viewYear, viewMonth, 1).getDay();
+  const daysInMonth = new Date(viewYear, viewMonth+1, 0).getDate();
+  const t = getToday();
+  const todayKeyStr = getTodayKey();
+
+  for(let i=0; i<firstDay; i++) { html += `<div class="cal-day pad"></div>`; }
+
+  for(let d=1; d<=daysInMonth; d++){
+    let dateObj = new Date(viewYear, viewMonth, d);
+    let key = dateKey(viewYear, viewMonth, d);
+    let split = splitFor(dateObj);
+    let isToday = dateObj.toDateString() === t.toDateString();
+    let isFuture = key > todayKeyStr;
+    
+    let isDone = false;
+    if(!isFuture){
+      let p = localStorage.getItem('progress:'+key);
+      if(p){
+        try {
+          let arr = JSON.parse(p);
+          if(Array.isArray(arr) && arr.length > 0 && arr.every(x => x && x.done)) { isDone = true; }
+        } catch(e) {}
+      }
+    }
+
+    let cls = 'cal-day';
+    if(split !== 'rest') cls += ' scheduled';
+    if(isToday) cls += ' today';
+    if(isDone) cls += ' done';
+
+    html += `<div class="${cls}" onclick="openDrawer('${key}')">${d}</div>`;
+  }
+  grid.innerHTML = html;
+}
+
+function changeMonth(dir){
+  viewMonth += dir;
+  if(viewMonth > 11){ viewMonth = 0; viewYear++; }
+  if(viewMonth < 0){ viewMonth = 11; viewYear--; }
+  renderCalendarGrid();
+}
+
+function openDrawer(key) {
+  const [y, m, d] = key.split('-').map(Number);
+  const dateObj = new Date(y, m-1, d);
+  const split = splitFor(dateObj);
+  const content = document.getElementById('drawerContent');
+  const isFuture = key > getTodayKey();
+  
+  let html = `<h3 class="fancy-title" style="margin:0 0 4px 0">${dateObj.toLocaleDateString(undefined, {month:'long', day:'numeric', year:'numeric'})}</h3>`;
+  
+  if(split === 'rest') {
+    html += `<p style="color:var(--text-dim); margin:0 0 24px 0; text-transform:uppercase; letter-spacing:1px; font-size:11px;">Recovery Day</p>`;
+    html += `<div style="text-align:center; padding: 24px 0; color:var(--text-dim); font-weight:300;">No workout scheduled for this date.</div>`;
+  } else {
+    const w = WORKOUTS[split];
+    html += `<p style="color:var(--text-dim); margin:0 0 24px 0; text-transform:uppercase; letter-spacing:1px; font-size:11px;">${w.label} Day</p>`;
+    
+    let progress = [];
+    try { progress = JSON.parse(localStorage.getItem('progress:'+key)); } catch(e){}
+    
+    if(!Array.isArray(progress) || progress.length === 0) {
+      html += `<div style="text-align:center; padding: 24px 0; color:var(--text-dim); font-weight:300;">Session not logged yet.</div>`;
+    } else {
+      w.exercises.forEach((ex, i) => {
+        let item = progress[i];
+        let doneMark = (item && item.done) ? '<span style="color:var(--text)">✓</span>' : '<span style="color:var(--text-dim)">—</span>';
+        let logText = (item && item.log) ? item.log : 'No data';
+        
+        html += `
+          <div class="drawer-log-item">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px;">
+              <div style="font-size:13px; font-weight:500">${ex.name}</div>
+              <div>${doneMark}</div>
+            </div>
+            <div style="font-family:'General Sans', sans-serif; font-style:italic; font-size:18px; color:var(--text);">${logText}</div>
+          </div>
+        `;
+      });
+    }
+  }
+
+  if(!isFuture){
+    html += `<button class="action-btn" onclick="jumpToDate('${key}')">Log / Edit This Date</button>`;
+  } else {
+    html += `<div style="text-align:center; margin-top:24px; font-size:12px; color:var(--text-dim); text-transform:uppercase; letter-spacing:1px;">Future Session Locked</div>`;
+  }
+  
+  content.innerHTML = html;
+  document.getElementById('drawerOverlay').classList.add('open');
+  document.getElementById('drawerPanel').classList.add('open');
+}
+
+function jumpToDate(key){
+  closeDrawer();
+  clearAutoSaveTimer();
+  activeDateKey = key;
+  switchTab('workout', document.querySelectorAll('.nav-item')[0]);
+}
+
+function closeDrawer() {
+  document.getElementById('drawerOverlay').classList.remove('open');
+  document.getElementById('drawerPanel').classList.remove('open');
+}
+
+function isSessionComplete(key){
+  if(key > getTodayKey()) return false;
+  let p = localStorage.getItem('progress:'+key);
+  if(!p) return false;
+  try {
+    let arr = JSON.parse(p);
+    return Array.isArray(arr) && arr.length > 0 && arr.every(x => x && x.done);
+  } catch(e) { return false; }
+}
+
+function calculateMonthlyDiscipline(year, month){
+  const t = getToday();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const isCurrentMonth = year === t.getFullYear() && month === t.getMonth();
+  const todayDate = t.getDate();
+  let scheduled = 0, completed = 0;
+
+  const onboardStr = localStorage.getItem(APP_ONBOARD_KEY) || getTodayKey();
+  const [onY, onM, onD] = onboardStr.split('-').map(Number);
+  const onboardDate = new Date(onY, onM - 1, onD);
+
+  for(let d = 1; d <= daysInMonth; d++){
+    const dateObj = new Date(year, month, d);
+    if(dateObj < onboardDate) continue;
+    if(splitFor(dateObj) === 'rest') continue;
+    if(isCurrentMonth && d > todayDate) continue;
+
+    const key = dateKey(year, month, d);
+    const done = isSessionComplete(key);
+
+    if(isCurrentMonth && d === todayDate){
+      if(done){ scheduled++; completed++; }
+      continue;
+    }
+
+    scheduled++;
+    if(done) completed++;
+  }
+
+  const missed = scheduled - completed;
+  const pct = scheduled === 0 ? 100 : Math.round((completed / scheduled) * 100);
+  return { pct, scheduled, completed, missed };
+}
+
+function renderDiscipline(){
+  const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const t = getToday();
+  const y = t.getFullYear();
+  const m = t.getMonth();
+  const { pct, scheduled, completed, missed } = calculateMonthlyDiscipline(y, m);
+
+  const block = document.getElementById('disciplineBlock');
+  const bar = document.getElementById('disciplineBar');
+  let stateClass = 'on-track';
+  let stateLabel = 'On track';
+
+  if(scheduled === 0){
+    stateClass = 'on-track';
+    stateLabel = 'No data yet';
+  } else if(pct < 50){
+    stateClass = 'behind';
+    stateLabel = 'Behind';
+  } else if(pct < 80){
+    stateClass = 'slipping';
+    stateLabel = 'Slipping';
+  }
+
+  block.className = 'integrity-block ' + stateClass;
+  document.getElementById('disciplineMonthLabel').textContent = monthNames[m] + ' Progress';
+  document.getElementById('disciplinePct').textContent = pct + '%';
+  document.getElementById('disciplineState').textContent = stateLabel;
+  bar.style.width = pct + '%';
+
+  if(scheduled === 0){
+    document.getElementById('disciplineMeta').textContent = 'No scheduled sessions due yet this month.';
+  } else if(missed === 0){
+    document.getElementById('disciplineMeta').textContent = completed + ' / ' + scheduled + ' scheduled days logged.';
+  } else {
+    document.getElementById('disciplineMeta').textContent = missed + ' missed · ' + completed + ' / ' + scheduled + ' scheduled days.';
+  }
+}
+
+function getAllProgressDates(){
+  let dates = [];
+  const todayStr = getTodayKey();
+  for(let i=0; i<localStorage.length; i++){
+    let k = localStorage.key(i);
+    if(k.startsWith('progress:')) {
+      let dStr = k.slice(9);
+      if(dStr <= todayStr) dates.push(dStr);
+    }
+  }
+  return dates.sort();
+}
+
+function calculateTotalSessions(){
+  let totalSessions = 0;
+  getAllProgressDates().forEach(key => { if(isSessionComplete(key)) totalSessions++; });
+  return totalSessions;
+}
+
+function calculateConsistency(){
+  const totalSessions = calculateTotalSessions();
+  const consistencyXP = totalSessions * 10;
+
+  let streak = 0;
+  const t = getToday();
+  let cursor = new Date(t.getFullYear(), t.getMonth(), t.getDate());
+  for(let i = 0; i < 3650; i++){
+    const split = splitFor(cursor);
+    if(split !== 'rest'){
+      const key = dateKey(cursor.getFullYear(), cursor.getMonth(), cursor.getDate());
+      const isToday = cursor.toDateString() === t.toDateString();
+      const done = isSessionComplete(key);
+      if(done){
+        streak++;
+      } else if(!isToday){
+        break;
+      }
+    }
+    cursor.setDate(cursor.getDate() - 1);
+  }
+  return { consistencyXP, currentStreak: streak };
+}
+
+function calculatePerformance(){
+  const bestByExercise = {};
+  let prCount = 0;
+  let performanceXP = 0;
+  let recentPRs = [];
+
+  getAllProgressDates().forEach(key => {
+    const [y, m, d] = key.split('-').map(Number);
+    const dateObj = new Date(y, m - 1, d);
+    const split = splitFor(dateObj);
+    if(split === 'rest') return;
+    const w = WORKOUTS[split];
+    let progress;
+    try { progress = JSON.parse(localStorage.getItem('progress:' + key)); } catch(e) { return; }
+    if(!Array.isArray(progress)) return;
+
+    w.exercises.forEach((ex, i) => {
+      const item = progress[i];
+      if(!item || !item.log) return;
+      const nums = item.log.match(/\d+/g);
+      if(!nums) return;
+      const maxVal = Math.max(...nums.map(Number));
+      const prevBest = bestByExercise[ex.name] || 0;
+      if(maxVal > prevBest){
+        bestByExercise[ex.name] = maxVal;
+        if(prevBest > 0){
+          prCount++;
+          performanceXP += 25;
+          recentPRs.push({ exercise: ex.name, value: maxVal, date: key });
+        }
+      }
+    });
+  });
+
+  return { performanceXP, prCount, recentPRs: recentPRs.slice(-5).reverse() };
+}
+
+function updateTodayBadge(){
+  const badge = document.getElementById('todayBadge');
+  const t = getToday();
+  const split = splitFor(t);
+  if(split === 'rest'){
+    badge.textContent = 'Rest Day';
+    return;
+  }
+  const label = WORKOUTS[split].label;
+  const todayKey = getTodayKey();
+  const done = isSessionComplete(todayKey);
+  badge.textContent = label + ' Day' + (done ? ' · Logged' : '');
+}
+
+function updateHeaderStreak(){
+  const { currentStreak } = calculateConsistency();
+  document.getElementById('streakBadge').textContent = currentStreak + (currentStreak === 1 ? ' day streak' : ' day streak');
+  updateTodayBadge();
+  if(document.getElementById('tab-stats').classList.contains('active')) renderDiscipline();
+}
+
+function renderBodyweightStats(){
+  const weight = parseFloat(localStorage.getItem(APP_WEIGHT_KEY));
+  if(!weight || weight <= 0){
+    document.getElementById('statBodyweight').textContent = '—';
+    document.getElementById('statProteinTarget').textContent = 'Add your bodyweight to set a protein target';
+    return;
+  }
+  document.getElementById('statBodyweight').textContent = Math.round(weight);
+  document.getElementById('statProteinTarget').textContent = Math.round(weight) + 'g daily protein target';
+}
+
+function editBodyweight(){
+  const current = localStorage.getItem(APP_WEIGHT_KEY) || '';
+  const input = window.prompt('Update your bodyweight (lbs):', current);
+  if(input === null) return;
+  const trimmed = input.trim();
+  const regex = /^\d+(\.\d+)?$/;
+  if(!regex.test(trimmed)){
+    alert('Invalid input. Please enter a valid number (e.g. 165).');
+    return;
+  }
+  const val = parseFloat(trimmed);
+  if(!(val > 0)) return;
+  localStorage.setItem(APP_WEIGHT_KEY, val);
+  renderBodyweightStats();
+}
+
+function getAppStorageKeys(){
+  const keys = [];
+  for(let i = 0; i < localStorage.length; i++){
+    const key = localStorage.key(i);
+    if(key && (key.startsWith('systemOverload_') || key.startsWith('progress:'))) keys.push(key);
+  }
+  return keys;
+}
+
+function exportBackup(){
+  const data = {};
+  getAppStorageKeys().forEach(key => { data[key] = localStorage.getItem(key); });
+  const backup = { app: 'System Overload', version: 1, exportedAt: new Date().toISOString(), data };
+  const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = 'system-overload-backup-' + getTodayKey() + '.json';
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
+function importBackup(input){
+  const file = input.files && input.files[0];
+  input.value = '';
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const backup = JSON.parse(reader.result);
+      if(!backup || backup.app !== 'System Overload' || backup.version !== 1 || !backup.data || typeof backup.data !== 'object') throw new Error('Invalid backup');
+      const entries = Object.entries(backup.data);
+      if(entries.some(([key, value]) => !(key.startsWith('systemOverload_') || key.startsWith('progress:')) || typeof value !== 'string')) throw new Error('Invalid backup');
+      if(!window.confirm('Restore this backup? It will replace the training data currently stored on this device.')) return;
+      getAppStorageKeys().forEach(key => localStorage.removeItem(key));
+      entries.forEach(([key, value]) => localStorage.setItem(key, value));
+      window.location.reload();
+    } catch(error) {
+      alert('This backup could not be restored. Choose a System Overload backup file and try again.');
+    }
+  };
+  reader.readAsText(file);
+}
+
+function resetAppData(){
+  if(!window.confirm('Reset all System Overload data on this device? This cannot be undone unless you exported a backup.')) return;
+  getAppStorageKeys().forEach(key => localStorage.removeItem(key));
+  window.location.reload();
+}
+
+function renderStatsTab(){
+  const { consistencyXP, currentStreak } = calculateConsistency();
+  const { performanceXP, prCount, recentPRs } = calculatePerformance();
+  const totalSessions = calculateTotalSessions();
+
+  renderBodyweightStats();
+  document.getElementById('statStreak').textContent = currentStreak;
+  document.getElementById('statConsistencyXP').textContent = consistencyXP + ' consistency XP';
+  document.getElementById('statPRCount').textContent = prCount;
+  document.getElementById('statPerformanceXP').textContent = performanceXP + ' performance XP';
+  document.getElementById('statSessions').textContent = pad(totalSessions);
+
+  const prList = document.getElementById('recentPRList');
+  if(recentPRs.length === 0){
+    prList.innerHTML = '';
+  } else {
+    prList.innerHTML = recentPRs.map(pr => {
+      const [y, m, d] = pr.date.split('-').map(Number);
+      const label = new Date(y, m - 1, d).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+      return `<div class="last-log-tag" style="margin-bottom:4px;">${pr.exercise}: <span class="fancy-italic">${pr.value}</span> — ${label}</div>`;
+    }).join('');
+  }
+
+  renderDiscipline();
+}
+
+// Swipe-to-switch-tabs (mobile)
+const TAB_ORDER = ['workout', 'calendar', 'stats', 'guide'];
+let swipeStartX = 0, swipeStartY = 0, swipeActive = false;
+
+function goToTab(tabId){
+  const btn = document.querySelector('.nav-item[data-tab="' + tabId + '"]');
+  if(btn) switchTab(tabId, btn);
+}
+
+document.addEventListener('touchstart', (e) => {
+  if(document.getElementById('drawerPanel').classList.contains('open')) { swipeActive = false; return; }
+  if(e.target.closest('input, .drawer-panel, .month-selector')) { swipeActive = false; return; }
+  swipeStartX = e.touches[0].clientX;
+  swipeStartY = e.touches[0].clientY;
+  swipeActive = true;
+}, { passive: true });
+
+document.addEventListener('touchend', (e) => {
+  if(!swipeActive) return;
+  swipeActive = false;
+  const touch = e.changedTouches[0];
+  const dx = touch.clientX - swipeStartX;
+  const dy = touch.clientY - swipeStartY;
+  const absDx = Math.abs(dx), absDy = Math.abs(dy);
+  const SWIPE_THRESHOLD = 60;
+
+  if(absDx > SWIPE_THRESHOLD && absDx > absDy * 1.5){
+    const activeEl = document.querySelector('.content-area.active');
+    if(!activeEl) return;
+    const activeTab = activeEl.id.replace('tab-', '');
+    const idx = TAB_ORDER.indexOf(activeTab);
+    if(dx < 0 && idx < TAB_ORDER.length - 1){
+      goToTab(TAB_ORDER[idx + 1]);
+    } else if(dx > 0 && idx > 0){
+      goToTab(TAB_ORDER[idx - 1]);
+    }
+  }
+}, { passive: true });
+
+// Initial Boot
+initApp();
+if('serviceWorker' in navigator){
+  window.addEventListener('load', () => navigator.serviceWorker.register('./service-worker.js').catch(() => {}));
+}
+</script>
+</body>
+</html>
