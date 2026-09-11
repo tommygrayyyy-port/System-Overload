@@ -142,10 +142,30 @@ html, body{ height: 100%; margin:0; background: #000; color: var(--text); font-f
 .ex-target{ font-size: 12px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; }
 .ex-desc{ font-size: 13px; color: var(--text-dim); line-height: 1.5; font-weight: 300; }
 
+.ex-desc-btn{
+  all: unset; display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  width: 100%; cursor: pointer; box-sizing: border-box; padding: 2px 0;
+}
+.ex-desc-btn .ex-desc-text{ font-size: 13px; color: var(--text-dim); line-height: 1.5; font-weight: 300; text-align: left; }
+.ex-desc-btn .ex-desc-chevron{ font-size: 20px; color: var(--text-dim); flex-shrink: 0; font-family: serif; line-height: 1; transition: color 0.2s; }
+.ex-desc-btn:active .ex-desc-text,
+.ex-desc-btn:active .ex-desc-chevron{ color: var(--text); }
+
+/* Exercise Guide Drawer Content */
+.guide-block{ margin-bottom: 24px; }
+.guide-block:last-child{ margin-bottom: 0; }
+.guide-block-lbl{ font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); margin-bottom: 8px; }
+.guide-block p{ font-size: 14px; color: var(--text); line-height: 1.6; font-weight: 300; margin: 0; }
+.guide-steps{ margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 10px; }
+.guide-steps li{ font-size: 14px; color: var(--text); line-height: 1.5; font-weight: 300; }
+ul.guide-steps li{ color: var(--text-dim); }
+ul.guide-steps li::marker{ color: var(--text-dim); }
+
 /* Custom Checkbox */
 .check-btn{
   width: 24px; height: 24px; border: 1px solid var(--line); background: transparent; color: transparent; 
   display: flex; align-items: center; justify-content: center; cursor: pointer; border-radius: 50%; transition: all 0.2s;
+  flex-shrink: 0;
 }
 .check-btn.checked{ background: var(--text); border-color: var(--text); color: var(--bg); box-shadow: var(--glow-md); }
 .check-btn svg { width: 14px; height: 14px; stroke: currentColor; stroke-width: 2; fill: none; }
@@ -158,6 +178,22 @@ html, body{ height: 100%; margin:0; background: #000; color: var(--text); font-f
 }
 .log-input:focus{ outline: none; }
 .log-input::placeholder{ color: #444; font-family: 'General Sans', sans-serif; font-style: normal; font-size: 13px; }
+
+/* Per-Set Rep Boxes */
+.sets-row{ display: flex; gap: 8px; }
+.set-box-wrap{ flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 0; }
+.set-num{ font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; }
+.set-input{
+  width: 100%; background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--radius);
+  color: var(--text); font-family: 'General Sans', sans-serif; font-style: italic; font-size: 17px;
+  text-align: center; padding: 12px 2px; transition: border-color 0.2s, box-shadow 0.2s; min-width: 0;
+}
+.set-input:focus{ outline: none; border-color: var(--text); box-shadow: var(--glow-sm); }
+.set-input.filled{ border-color: #3a3a3a; }
+.set-input::placeholder{ color: #444; font-family: 'General Sans', sans-serif; font-style: normal; font-size: 12px; }
+
+.ex-bottom-row{ display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.ex-tags{ display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
 
 .last-log-tag{ font-size: 12px; color: #666; font-weight: 400; margin-top: 4px; }
 .overload-banner{
@@ -194,7 +230,14 @@ html, body{ height: 100%; margin:0; background: #000; color: var(--text); font-f
 .xp-bar-bg{ height: 2px; background: var(--line); width: 100%; margin-top: 16px; position: relative; }
 .xp-bar-fill{ height: 100%; background: var(--text); position: absolute; top: 0; left: 0; transition: width 0.5s; box-shadow: var(--glow-sm); }
 
-.integrity-block { border-bottom: 1px solid var(--line); padding-bottom: 16px; transition: background 0.3s, color 0.3s, padding 0.3s; border-radius: var(--radius); }
+.xp-tap-btn{
+  all: unset; display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
+  font-size: 11px; color: var(--text-dim); margin-top: 12px; text-transform: uppercase; letter-spacing: 1px;
+  box-sizing: border-box;
+}
+.xp-tap-btn .xp-tap-chevron{ font-size: 15px; font-family: serif; color: var(--text-dim); line-height: 1; transition: color 0.2s; }
+.xp-tap-btn:active{ color: var(--text); }
+.xp-tap-btn:active .xp-tap-chevron{ color: var(--text); }
 .integrity-block .lbl { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); margin-bottom: 8px; }
 .integrity-block .num { font-size: 42px; font-family: 'General Sans', sans-serif; text-shadow: var(--glow-md); }
 .integrity-state {
@@ -346,13 +389,19 @@ html, body{ height: 100%; margin:0; background: #000; color: var(--text); font-f
         <div class="lbl">Consistency — showing up</div>
         <div class="num" id="statStreak">0</div>
         <div style="font-size: 11px; color: var(--text-dim); margin-top: 4px; text-transform: uppercase; letter-spacing: 1px;">day streak</div>
-        <div style="font-size: 11px; color: var(--text-dim); margin-top: 12px; text-transform: uppercase; letter-spacing: 1px;" id="statConsistencyXP">0 consistency XP</div>
+        <button class="xp-tap-btn" onclick="openXPGuide('consistency')" aria-label="How Consistency XP works">
+          <span id="statConsistencyXP">0 consistency XP</span>
+          <span class="xp-tap-chevron" aria-hidden="true">›</span>
+        </button>
       </div>
       <div class="stat-item">
         <div class="lbl">Performance — getting stronger</div>
         <div class="num" id="statPRCount">0</div>
         <div style="font-size: 11px; color: var(--text-dim); margin-top: 4px; text-transform: uppercase; letter-spacing: 1px;">personal records</div>
-        <div style="font-size: 11px; color: var(--text-dim); margin-top: 12px; text-transform: uppercase; letter-spacing: 1px;" id="statPerformanceXP">0 performance XP</div>
+        <button class="xp-tap-btn" onclick="openXPGuide('performance')" aria-label="How Performance XP works">
+          <span id="statPerformanceXP">0 performance XP</span>
+          <span class="xp-tap-chevron" aria-hidden="true">›</span>
+        </button>
         <div id="recentPRList" style="margin-top: 16px;"></div>
       </div>
       <div class="stat-item">
@@ -536,18 +585,122 @@ window.onload = initApp;
 const WORKOUTS = {
   A: { key: 'A', label: 'Push', subtitle: 'Shoulders, Chest & Triceps',
     exercises: [
-      { name:'Pike Push-Ups', targetRange:[8,12], target:'4 × 8–12', setup:'Feet elevated. Head descends diagonally.' },
-      { name:'Deficit Push-Ups', targetRange:[10,15], target:'4 × 10–15', setup:'Hands elevated for stretch. 3s eccentric.' },
-      { name:'Chair Dips', targetRange:[12,15], target:'3 × 12–15', setup:'Elbows tucked straight back.' },
-      { name:'Neck Flexion', targetRange:[20,25], target:'3 × 20–25', setup:'Bed-edge. Controlled chin tucks.' }
+      { name:'Pike Push-Ups', sets:4, targetRange:[8,12], target:'4 × 8–12', setup:'Feet elevated. Head descends diagonally.',
+        steps: [
+          'Start in a pike position — hips lifted high, hands and feet on the ground (or feet elevated on a chair/bed), forming an inverted V.',
+          'Keep your arms straight with hands roughly shoulder-width apart, fingers spread for stability.',
+          'Bend your elbows and lower the crown of your head toward a point in front of your hands, tracking on a diagonal line rather than straight down.',
+          'Pause briefly near the floor, then press through your palms back to the starting pike position.'
+        ],
+        breathing: 'Inhale on the way down, exhale forcefully as you press back up.',
+        mistakes: [
+          'Letting the hips drop, which turns this into a regular push-up and removes the shoulder emphasis.',
+          'Rushing the descent instead of controlling it.',
+          'Flaring the elbows out to 90°, which stresses the shoulder joint — keep them at a moderate angle.'
+        ]
+      },
+      { name:'Deficit Push-Ups', sets:4, targetRange:[10,15], target:'4 × 10–15', setup:'Hands elevated for stretch. 3s eccentric.',
+        steps: [
+          'Place your hands on two stable elevated surfaces (books, blocks, chair edges) slightly wider than shoulder width.',
+          'Set up in a straight-line plank from head to heels, feet together behind you.',
+          'Lower your chest below the level of your hands, counting a full 3 seconds down, until you feel a deep stretch across the chest.',
+          'Drive through your palms back up to full arm extension without letting your hips sag.'
+        ],
+        breathing: 'Inhale through the full 3-second descent, exhale as you press up.',
+        mistakes: [
+          'Letting the hips sag or the lower back arch, which shifts load off the chest and onto the spine.',
+          'Cutting the eccentric short — the 3-second count is what builds strength here.',
+          'Elevating hands too high, which can overstress the shoulder at the bottom of the stretch.'
+        ]
+      },
+      { name:'Chair Dips', sets:3, targetRange:[12,15], target:'3 × 12–15', setup:'Elbows tucked straight back.',
+        steps: [
+          'Sit on the edge of a sturdy chair with hands gripping the edge next to your hips, fingers pointing forward.',
+          'Walk your feet out and slide your hips off the seat so your weight is supported by your arms.',
+          'Bend your elbows straight back — not out to the sides — lowering until your upper arms are roughly parallel to the floor.',
+          'Press through your palms to straighten your arms back to the top, keeping shoulders down away from your ears.'
+        ],
+        breathing: 'Inhale as you lower, exhale as you press up.',
+        mistakes: [
+          'Letting elbows flare outward, straining the shoulder joint.',
+          'Dropping too low before you have the shoulder mobility for it — stop at parallel until deeper feels comfortable.',
+          'Shrugging shoulders up toward the ears instead of keeping them packed down.'
+        ]
+      },
+      { name:'Neck Flexion', sets:3, targetRange:[20,25], target:'3 × 20–25', setup:'Bed-edge. Controlled chin tucks.',
+        steps: [
+          'Lie on your back with your head hanging just off the edge of a bed or bench, shoulders fully supported.',
+          'Let your head drop back gently until you feel a light stretch in the front of your neck.',
+          'Tuck your chin toward your chest, lifting your head up and forward under control.',
+          'Lower back down slowly to the stretched position and repeat without letting momentum take over.'
+        ],
+        breathing: 'Exhale as you lift your head, inhale as you lower it back down.',
+        mistakes: [
+          'Using a jerking or bouncing motion instead of a slow, controlled lift.',
+          'Letting the shoulders lift off the surface — only the neck should move.',
+          'Overextending the neck backward past a comfortable range on the way down.'
+        ]
+      }
     ]
   },
   B: { key: 'B', label: 'Pull & Legs', subtitle: 'Back, Legs & Core',
     exercises: [
-      { name:'Frame Rows', targetRange:[12,15], target:'4 × 12–15', setup:'Deep lean, pull chest to anchor.' },
-      { name:'Split Squats', targetRange:[10,12], target:'3 × 10–12 / leg', setup:'Rear foot elevated. Thigh parallel.' },
-      { name:'Neck Extension', targetRange:[20,25], target:'3 × 20–25', setup:'Face down bed-edge. Controlled raise.' },
-      { name:'Hollow Holds', targetRange:[45,60], target:'3 × 45–60s', setup:'Core braced, lower back flat.' }
+      { name:'Frame Rows', sets:4, targetRange:[12,15], target:'4 × 12–15', setup:'Deep lean, pull chest to anchor.',
+        steps: [
+          'Find a sturdy anchor at chest height — a table edge, door frame, or fixed bar works well.',
+          'Grip the anchor with both hands, walk your feet forward, and lean back until your arms are fully extended and your body forms a straight line.',
+          'Keep your core braced and pull your chest toward the anchor, driving your elbows back and squeezing your shoulder blades together.',
+          'Lower back down under control to a full arm extension before the next rep.'
+        ],
+        breathing: 'Exhale as you pull yourself in, inhale as you lower back out.',
+        mistakes: [
+          'Letting the hips sag or pike, turning it into a core exercise instead of a back exercise.',
+          'Using a shallow range of motion — the deeper the lean, the harder your back has to work.',
+          'Yanking with the arms instead of initiating the pull with the shoulder blades.'
+        ]
+      },
+      { name:'Split Squats', sets:3, targetRange:[10,12], target:'3 × 10–12 / leg', setup:'Rear foot elevated. Thigh parallel.',
+        steps: [
+          'Stand a couple feet in front of a chair or step, and place the top of your rear foot on it behind you.',
+          'Lower your body straight down by bending the front knee until your front thigh is roughly parallel to the floor.',
+          'Keep your torso upright and your front knee tracking over your toes, not caving inward.',
+          'Drive through the heel of your front foot to stand back up to the start.'
+        ],
+        breathing: 'Inhale on the way down, exhale as you drive back up.',
+        mistakes: [
+          'Letting the front knee collapse inward instead of tracking straight over the foot.',
+          'Leaning too far forward, shifting work off the legs and onto the lower back.',
+          'Only doing a partial range of motion — reaching parallel is what makes this effective.'
+        ]
+      },
+      { name:'Neck Extension', sets:3, targetRange:[20,25], target:'3 × 20–25', setup:'Face down bed-edge. Controlled raise.',
+        steps: [
+          'Lie face down on a bed or bench with your head hanging off the edge, shoulders fully supported.',
+          'Let your head drop forward gently until you feel a light stretch at the back of your neck.',
+          'Raise your head up and back under control until your neck reaches a neutral, slightly extended position.',
+          'Lower back down slowly to the stretched position without letting momentum carry the movement.'
+        ],
+        breathing: 'Exhale as you raise your head, inhale as you lower it.',
+        mistakes: [
+          'Snapping the head back quickly instead of controlling the movement.',
+          'Extending too far backward past neutral, which can strain the neck.',
+          'Letting the shoulders or torso move — isolate the motion to the neck only.'
+        ]
+      },
+      { name:'Hollow Holds', sets:3, targetRange:[45,60], target:'3 × 45–60s', setup:'Core braced, lower back flat.',
+        steps: [
+          'Lie on your back with arms extended overhead and legs straight.',
+          'Press your lower back flat into the floor by engaging your core and tilting your pelvis slightly.',
+          'Lift your shoulders and legs a few inches off the ground, forming a slight "banana" shape with your body.',
+          'Hold the position for the target duration, keeping your lower back pinned to the floor the entire time.'
+        ],
+        breathing: 'Breathe steadily and shallowly through the hold — don\'t hold your breath.',
+        mistakes: [
+          'Letting the lower back arch off the floor, which removes the core tension the exercise is meant to build.',
+          'Lifting the legs too high, which makes it easier but less effective — keep them low.',
+          'Holding your breath, which increases spinal pressure unnecessarily.'
+        ]
+      }
     ]
   }
 };
@@ -580,6 +733,21 @@ function splitFor(date){
   if(d === 1 || d === 4) return 'A';
   if(d === 2 || d === 5) return 'B';
   return 'rest';
+}
+
+// Splits a stored log string into one value per set slot, preserving empty slots by position
+function parseLogArray(logStr, numSets){
+  let arr = (logStr || '').split(',').map(s => s.trim());
+  if(arr.length === 1 && arr[0] === '') arr = [];
+  while(arr.length < numSets) arr.push('');
+  return arr.slice(0, numSets);
+}
+
+// Formats a stored log string for display, showing em-dashes for unfilled sets
+function formatLogDisplay(logStr, numSets){
+  const arr = parseLogArray(logStr, numSets);
+  if(arr.every(v => v === '')) return '';
+  return arr.map(v => v === '' ? '–' : v).join(', ');
 }
 
 function switchTab(tabId, btn){
@@ -692,12 +860,22 @@ async function renderWorkoutTab(key){
     let lastItem = (lastData && lastData[i]) ? lastData[i] : null;
     let showOverload = false;
     if(lastItem && lastItem.log){
-      const expectedSets = parseInt(ex.target.split('×')[0], 10) || 1;
+      const expectedSets = ex.sets;
       let nums = lastItem.log.match(/\d+/g)?.map(Number) || [];
       if(nums.length >= expectedSets && nums.every(n => n >= ex.targetRange[1])){
         showOverload = true;
       }
     }
+
+    const setVals = parseLogArray(item.log, ex.sets);
+    const setBoxesHtml = setVals.map((v, j) => `
+        <div class="set-box-wrap">
+          <span class="set-num">Set ${j+1}</span>
+          <input type="text" inputmode="numeric" class="set-input ${v !== '' ? 'filled' : ''}" data-idx="${i}" data-set="${j}" value="${v}" placeholder="${ex.targetRange[0]}–${ex.targetRange[1]}" aria-label="${ex.name} set ${j+1} reps" oninput="updateSetLog(${i}, ${j}, this)">
+        </div>
+      `).join('');
+
+    const prevDisplay = lastItem ? formatLogDisplay(lastItem.log, ex.sets) : '';
 
     html += `
       <div class="ex-card">
@@ -705,18 +883,21 @@ async function renderWorkoutTab(key){
           <div class="ex-title">${ex.name}</div>
           <div class="ex-target">${ex.target}</div>
         </div>
-        <div class="ex-desc">${ex.setup}</div>
-        <div class="log-row">
+        <button class="ex-desc-btn" onclick="openExerciseGuide(${i})" aria-label="View full guide for ${ex.name}">
+          <span class="ex-desc-text">${ex.setup}</span>
+          <span class="ex-desc-chevron" aria-hidden="true">›</span>
+        </button>
+        <div class="sets-row">
+          ${setBoxesHtml}
+        </div>
+        <div class="ex-bottom-row">
           <button class="check-btn ${item.done ? 'checked' : ''}" role="checkbox" aria-checked="${item.done}" aria-label="Toggle ${ex.name} completion" onclick="toggleEx(${i})">
             <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
           </button>
-          <div style="flex:1; text-align:right;">
-            <input type="text" inputmode="numeric" class="log-input" data-idx="${i}" value="${item.log || ''}" placeholder="e.g. 12, 11, 10" aria-label="Reps for ${ex.name}" oninput="updateLog(${i}, this)">
+          <div class="ex-tags">
+            ${prevDisplay ? `<div class="last-log-tag">Prev: <span class="fancy-italic">${prevDisplay}</span></div>` : ''}
+            ${showOverload ? `<div class="overload-banner">Add Load</div>` : ''}
           </div>
-        </div>
-        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-          ${lastItem ? `<div class="last-log-tag">Prev: <span class="fancy-italic">${lastItem.log || '---'}</span></div>` : '<div></div>'}
-          ${showOverload ? `<div class="overload-banner">Add Load</div>` : ''}
         </div>
       </div>
     `;
@@ -742,12 +923,17 @@ const persistProgress = debounce((key, progressData) => {
   flashAutoSave();
 }, 300);
 
-window.updateLog = (i, el) => {
-  const sanitized = el.value.replace(/[^0-9,]/g, '');
+window.updateSetLog = (exIdx, setIdx, el) => {
+  const sanitized = el.value.replace(/[^0-9]/g, '');
   if (el.value !== sanitized) {
     el.value = sanitized;
   }
-  window.currentProgress[i].log = sanitized;
+  el.classList.toggle('filled', sanitized !== '');
+
+  const numSets = WORKOUTS[window.currentSplit].exercises[exIdx].sets;
+  let arr = parseLogArray(window.currentProgress[exIdx].log, numSets);
+  arr[setIdx] = sanitized;
+  window.currentProgress[exIdx].log = arr.join(',');
   persistProgress(activeDateKey, window.currentProgress);
 };
 
@@ -844,7 +1030,7 @@ function openDrawer(key) {
       w.exercises.forEach((ex, i) => {
         let item = progress[i];
         let doneMark = (item && item.done) ? '<span style="color:var(--text)">✓</span>' : '<span style="color:var(--text-dim)">—</span>';
-        let logText = (item && item.log) ? item.log : 'No data';
+        let logText = (item && item.log) ? formatLogDisplay(item.log, ex.sets) : 'No data';
         
         html += `
           <div class="drawer-log-item">
@@ -875,6 +1061,106 @@ function jumpToDate(key){
   clearAutoSaveTimer();
   activeDateKey = key;
   switchTab('workout', document.querySelectorAll('.nav-item')[0]);
+}
+
+function openExerciseGuide(exIdx){
+  const split = window.currentSplit;
+  if(!split || split === 'rest' || !WORKOUTS[split]) return;
+  const ex = WORKOUTS[split].exercises[exIdx];
+  if(!ex) return;
+
+  const content = document.getElementById('drawerContent');
+  let html = `<h3 class="fancy-title" style="margin:0 0 4px 0">${ex.name}</h3>`;
+  html += `<p style="color:var(--text-dim); margin:0 0 24px 0; text-transform:uppercase; letter-spacing:1px; font-size:11px;">${ex.target}</p>`;
+
+  html += `
+    <div class="guide-block">
+      <div class="guide-block-lbl">Setup</div>
+      <p>${ex.setup}</p>
+    </div>
+  `;
+
+  if(ex.steps && ex.steps.length){
+    html += `
+      <div class="guide-block">
+        <div class="guide-block-lbl">Execution</div>
+        <ol class="guide-steps">
+          ${ex.steps.map(s => `<li>${s}</li>`).join('')}
+        </ol>
+      </div>
+    `;
+  }
+
+  if(ex.breathing){
+    html += `
+      <div class="guide-block">
+        <div class="guide-block-lbl">Breathing</div>
+        <p>${ex.breathing}</p>
+      </div>
+    `;
+  }
+
+  if(ex.mistakes && ex.mistakes.length){
+    html += `
+      <div class="guide-block">
+        <div class="guide-block-lbl">Common Mistakes</div>
+        <ul class="guide-steps">
+          ${ex.mistakes.map(s => `<li>${s}</li>`).join('')}
+        </ul>
+      </div>
+    `;
+  }
+
+  content.innerHTML = html;
+  document.getElementById('drawerOverlay').classList.add('open');
+  document.getElementById('drawerPanel').classList.add('open');
+}
+
+function openXPGuide(category){
+  const content = document.getElementById('drawerContent');
+  let html = '';
+
+  if(category === 'consistency'){
+    html += `<h3 class="fancy-title" style="margin:0 0 4px 0">Consistency XP</h3>`;
+    html += `<p style="color:var(--text-dim); margin:0 0 24px 0; text-transform:uppercase; letter-spacing:1px; font-size:11px;">Rewards showing up</p>`;
+    html += `
+      <div class="guide-block">
+        <div class="guide-block-lbl">How it's earned</div>
+        <p>You earn 10 XP every time you fully complete a scheduled training day — every exercise on that day's list checked off as done.</p>
+      </div>
+      <div class="guide-block">
+        <div class="guide-block-lbl">What it measures</div>
+        <p>Consistency XP has nothing to do with how much weight you moved or how many reps you hit. It only tracks whether you showed up and finished the session. A completed session on a hard week counts the same as a completed session on an easy one.</p>
+      </div>
+      <div class="guide-block">
+        <div class="guide-block-lbl">Streak vs. XP</div>
+        <p>Your day streak (shown above) counts consecutive scheduled training days completed in a row, and resets if you miss one. Consistency XP keeps accumulating from every session you've ever completed and never resets, so it reflects your total track record rather than your current run.</p>
+      </div>
+    `;
+  } else if(category === 'performance'){
+    html += `<h3 class="fancy-title" style="margin:0 0 4px 0">Performance XP</h3>`;
+    html += `<p style="color:var(--text-dim); margin:0 0 24px 0; text-transform:uppercase; letter-spacing:1px; font-size:11px;">Rewards getting stronger</p>`;
+    html += `
+      <div class="guide-block">
+        <div class="guide-block-lbl">How it's earned</div>
+        <p>You earn 25 XP every time you set a personal record on a specific exercise — logging a higher rep (or second) count on any single set than you've ever logged for that exercise before.</p>
+      </div>
+      <div class="guide-block">
+        <div class="guide-block-lbl">What it measures</div>
+        <p>Performance XP only cares about your best number, not how often you train. Showing up doesn't earn any Performance XP by itself — you have to actually beat a prior best on one of your sets.</p>
+      </div>
+      <div class="guide-block">
+        <div class="guide-block-lbl">How records are tracked</div>
+        <p>Each exercise has its own personal-best count, tracked independently and chronologically across every session you've logged. Your first-ever log of an exercise sets the initial baseline rather than counting as a record — everything after that is compared against your current best for that exercise.</p>
+      </div>
+    `;
+  } else {
+    return;
+  }
+
+  content.innerHTML = html;
+  document.getElementById('drawerOverlay').classList.add('open');
+  document.getElementById('drawerPanel').classList.add('open');
 }
 
 function closeDrawer() {
